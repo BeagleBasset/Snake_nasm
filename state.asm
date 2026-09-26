@@ -51,6 +51,7 @@ section .bss
 section .text
     global state_init
     global state_debug_print
+    global state_update
 
     global snake_x
     global snake_y
@@ -77,14 +78,14 @@ state_init:
     jae .snake_done
 
     ; x[i] = x[0] - i * dir_x
-    mov al, [dir_x]
+    movzx eax, byte [dir_x]
     imul eax, ecx
     mov bl, [snake_x]
     sub bl, al
     mov [snake_x + rcx], bl
 
     ; y[i] = y[0] - i * dir_y
-    mov al, [dir_y]
+    movzx eax, byte [dir_y]
     imul eax, ecx
     mov bl, [snake_y]
     sub bl, al
@@ -215,3 +216,43 @@ state_debug_print:
     mov rsi, dbg_newline
     mov rdx, 1
     call print
+
+    ret
+
+;-----------------------------------------------------------
+; state_update
+;
+; Move every body segment to the previous segment's old
+; position, starting from the tail, then move the head.
+;-----------------------------------------------------------
+
+state_update:
+    ; i = snake_length - 1
+    movzx ecx, byte [snake_length]
+    dec ecx
+
+.update_body:
+    cmp ecx, 0
+    jle .move_head
+
+    ; snake_x[i] = snake_x[i-1]
+    movzx eax, byte [snake_x + rcx - 1]
+    mov [snake_x + rcx], al
+
+    ; snake_y[i] = snake_y[i-1]
+    movzx eax, byte [snake_y + rcx - 1]
+    mov [snake_y + rcx], al
+
+    dec ecx
+    jmp .update_body
+
+.move_head:
+    ; snake_x[0] += dir_x
+    movzx eax, byte [dir_x]
+    add byte [snake_x], al
+
+    ; snake_y[0] += dir_y
+    movzx eax, byte [dir_y]
+    add byte [snake_y], al
+
+    ret
