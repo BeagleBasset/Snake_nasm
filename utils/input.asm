@@ -21,16 +21,13 @@
 ;   raw mode after the program ends.
 ; ------------------------------------------------------------
 
+%include "linux.inc"
+
 global input_raw_enable
 global input_raw_disable
 
 section .data
-    tcgets      equ 0x5401
-    tcsets      equ 0x5402
-    icanon_echo equ 10          ; ICANON (2) + ECHO (8)
-    f_getfl     equ 3
-    f_setfl     equ 4
-    o_nonblock  equ 2048
+    icanon_echo equ ICANON + ECHO
 
 section .bss
     termios_buf resb 64
@@ -45,9 +42,9 @@ input_raw_enable:
     push rsi
     push rdx
 
-    mov rax, 16               ; sys_ioctl
-    mov rdi, 0
-    mov rsi, tcgets
+    mov rax, SYS_IOCTL
+    mov rdi, STDIN
+    mov rsi, TCGETS
     mov rdx, termios_buf
     syscall
 
@@ -56,24 +53,24 @@ input_raw_enable:
     and eax, ~icanon_echo
     mov [termios_buf + 12], eax
 
-    mov rax, 16
-    mov rdi, 0
-    mov rsi, tcsets
+    mov rax, SYS_IOCTL
+    mov rdi, STDIN
+    mov rsi, TCSETS
     mov rdx, termios_buf
     syscall
 
-    mov rax, 72               ; sys_fcntl
-    mov rdi, 0
-    mov rsi, f_getfl
+    mov rax, SYS_FCNTL
+    mov rdi, STDIN
+    mov rsi, F_GETFL
     mov rdx, 0
     syscall
     mov [saved_flags], eax
 
     mov edx, eax
-    or edx, o_nonblock
-    mov rax, 72
-    mov rdi, 0
-    mov rsi, f_setfl
+    or edx, O_NONBLOCK
+    mov rax, SYS_FCNTL
+    mov rdi, STDIN
+    mov rsi, F_SETFL
     syscall
 
     pop rdx
@@ -89,16 +86,16 @@ input_raw_disable:
     push rdx
 
     mov edx, [saved_flags]
-    mov rax, 72
-    mov rdi, 0
-    mov rsi, f_setfl
+    mov rax, SYS_FCNTL
+    mov rdi, STDIN
+    mov rsi, F_SETFL
     syscall
 
     mov eax, [saved_lflag]
     mov [termios_buf + 12], eax
-    mov rax, 16
-    mov rdi, 0
-    mov rsi, tcsets
+    mov rax, SYS_IOCTL
+    mov rdi, STDIN
+    mov rsi, TCSETS
     mov rdx, termios_buf
     syscall
 

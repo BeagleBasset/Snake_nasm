@@ -5,6 +5,8 @@
 ; score, and other relevant data.
 ;-----------------------------------------------------------
 
+%include "linux.inc"
+
 ; externs
 extern print
 extern int_to_string
@@ -50,6 +52,12 @@ section .text
     global state_init
     global state_debug_print
 
+    global snake_x
+    global snake_y
+    global snake_length
+    global food_x
+    global food_y   
+
 ;-----------------------------------------------------------
 ; state_init
 ;-----------------------------------------------------------
@@ -58,8 +66,34 @@ state_init:
     mov byte [snake_length], 3
     mov byte [dir_x], 1
     mov byte [dir_y], 0
+    ; Snake head
     mov byte [snake_x], 15
     mov byte [snake_y], 7
+    ; Segments (body) of the snake
+    ; snake[i] = head - i * dir
+    mov ecx, 1
+.init_snake:
+    cmp cl, [snake_length]
+    jae .snake_done
+
+    ; x[i] = x[0] - i * dir_x
+    mov al, [dir_x]
+    imul eax, ecx
+    mov bl, [snake_x]
+    sub bl, al
+    mov [snake_x + rcx], bl
+
+    ; y[i] = y[0] - i * dir_y
+    mov al, [dir_y]
+    imul eax, ecx
+    mov bl, [snake_y]
+    sub bl, al
+    mov [snake_y + rcx], bl
+
+    inc ecx
+    jmp .init_snake
+
+.snake_done:
     mov byte [food_x], 10
     mov byte [food_y], 5
     mov byte [score], 0
@@ -76,7 +110,7 @@ state_init:
 
 state_debug_print:
 ; Head
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_head
     mov rdx, dbg_head_len
     call print
@@ -85,10 +119,10 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_comma
     mov rdx, dbg_comma_len
     call print
@@ -97,11 +131,11 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
 ; Snake length
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_len
     mov rdx, dbg_len_len
     call print
@@ -110,11 +144,11 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
 ; Direction
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_dir
     mov rdx, dbg_dir_len
     call print
@@ -123,10 +157,10 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_comma
     mov rdx, dbg_comma_len
     call print
@@ -135,11 +169,11 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
 ; Food Position
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_food
     mov rdx, dbg_food_len
     call print
@@ -148,10 +182,10 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_comma
     mov rdx, dbg_comma_len
     call print
@@ -160,11 +194,11 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
 ; Score
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_score
     mov rdx, dbg_score_len
     call print
@@ -173,11 +207,11 @@ state_debug_print:
     lea rsi, [int_buffer + 31]  ; point to the end of the buffer
     call int_to_string
 
-    mov rdi, 1
+    mov rdi, STDOUT
     call print
 
 ; Newline  
-    mov rdi, 1
+    mov rdi, STDOUT
     mov rsi, dbg_newline
     mov rdx, 1
     call print

@@ -18,6 +18,8 @@
 ;   to speed up or slow down the game.
 ; ------------------------------------------------------------
 
+%include "linux.inc"
+
 global sleep_tick
 
 section .data
@@ -31,7 +33,7 @@ sleep_tick:
     push rax
     push rdi
     push rsi
-    mov rax, 35              ; sys_nanosleep
+    mov rax, SYS_NANOSLEEP
     mov rdi, tick_length
     mov rsi, 0
     syscall

@@ -23,13 +23,15 @@
 ;   codebase keeps long-lived state in R11.
 ; ------------------------------------------------------------
 
+%include "linux.inc"
+
 global print
 
 section .text
 
 print:
     push rcx
-    mov rax, 1              ; sys_write
+    mov rax, SYS_WRITE
     syscall
     pop rcx
     ret
