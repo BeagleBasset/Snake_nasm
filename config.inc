@@ -1,0 +1,3 @@
+    BOARD_WIDTH  equ 30
+    BOARD_HEIGHT equ 15
+    MAX_LENGTH   equ 100

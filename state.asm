@@ -10,9 +10,7 @@ extern print
 extern int_to_string
 
 section .data
-    BOARD_WIDTH  equ 30
-    BOARD_HEIGHT equ 15
-    MAX_LENGTH   equ 100
+    %include "config.inc"
 
 ; Debugging strings
     dbg_head     db "Head: ("
