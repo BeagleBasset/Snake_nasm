@@ -25,6 +25,7 @@
 
 global input_raw_enable
 global input_raw_disable
+global input_read_key
 
 section .data
     icanon_echo equ ICANON + ECHO
@@ -33,6 +34,7 @@ section .bss
     termios_buf resb 64
     saved_lflag resb 4
     saved_flags resb 4
+    input_key_buf resb 1
 
 section .text
 
@@ -103,4 +105,30 @@ input_raw_disable:
     pop rsi
     pop rdi
     pop rax
+    ret
+
+;-----------------------------------------------------------
+; input_read_key
+;
+; Output:
+;   rax = 0       -> no key
+;   rax = ASCII   -> key was read
+;-----------------------------------------------------------
+
+input_read_key:
+    mov rax, SYS_READ
+    mov rdi, STDIN
+    lea rsi, [input_key_buf]
+    mov rdx, 1
+    syscall
+
+    cmp rax, 1
+    je .got_key
+
+    ; EAGAIN / any other read error -> no key
+    xor eax, eax
+    ret
+
+.got_key:
+    movzx eax, byte [input_key_buf]
     ret

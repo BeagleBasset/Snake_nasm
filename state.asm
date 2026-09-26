@@ -52,6 +52,7 @@ section .text
     global state_init
     global state_debug_print
     global state_update
+    global state_set_direction
 
     global snake_x
     global snake_y
@@ -256,3 +257,41 @@ state_update:
     add byte [snake_y], al
 
     ret
+
+;-----------------------------------------------------------
+; state_set_direction
+;
+; Input:
+;   DIL = requested dir_x
+;   SIL = requested dir_y
+;
+; Values:
+;   -1, 0, 1
+;
+; Rejects a 180 degree turn.
+;-----------------------------------------------------------
+
+state_set_direction:
+
+    ; Check:
+    ; requested_x == -current_x
+    ; AND
+    ; requested_y == -current_y
+
+    movsx eax, byte [dir_x]
+    neg eax
+    cmp dil, al
+    jne .accept
+
+    movsx eax, byte [dir_y]
+    neg eax
+    cmp sil, al
+    je .reject
+
+.accept:
+    mov [dir_x], dil
+    mov [dir_y], sil
+    ret
+
+.reject:
+    ret    

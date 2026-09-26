@@ -43,3 +43,6 @@
 
 ; ASCII control character (starts an ANSI escape sequence)
 %define ESC 27
+
+; errno
+EAGAIN equ 11
