@@ -55,12 +55,14 @@ section .text
     global state_update
     global state_set_direction
     global state_check_food
+    global state_check_collision
 
     global snake_x
     global snake_y
     global snake_length
     global food_x
-    global food_y   
+    global food_y
+    global game_over
 
 ;-----------------------------------------------------------
 ; state_init
@@ -259,6 +261,79 @@ state_update:
     movzx eax, byte [dir_y]
     add byte [snake_y], al
 
+    ret
+
+;-----------------------------------------------------------
+; state_check_collision
+;
+; Check whether the snake head collided with:
+;   - the board boundary
+;   - its own body
+;
+; If a collision occurs:
+;   game_over = 1
+;
+; Input:
+;   none
+;
+; Output:
+;   none
+;-----------------------------------------------------------
+
+state_check_collision:
+    ;-------------------------------------------------------
+    ; Wall collision - X
+    ; Coordinates are unsigned bytes.
+    ; Any value >= BOARD_WIDTH means collision.
+    ; This also catches 0 -> 255 when moving left.
+    ;-------------------------------------------------------
+
+    movzx eax, byte [snake_x]
+    cmp eax, BOARD_WIDTH
+    jae .collision
+
+    ;-------------------------------------------------------
+    ; Wall collision - Y
+    ;-------------------------------------------------------
+
+    movzx eax, byte [snake_y]
+    cmp eax, BOARD_HEIGHT
+    jae .collision
+
+    ;-------------------------------------------------------
+    ; Self collision
+    ;
+    ; Start at segment 1 because segment 0 is the head.
+    ;-------------------------------------------------------
+
+    movzx ecx, byte [snake_length]
+    cmp ecx, 2
+    jb .no_collision
+
+    mov edx, 1
+
+.check_body:
+    cmp edx, ecx
+    jae .no_collision
+
+    ; Compare X
+    mov al, [snake_x + rdx]
+    cmp al, [snake_x]
+    jne .next_segment
+
+    ; Compare Y
+    mov al, [snake_y + rdx]
+    cmp al, [snake_y]
+    je .collision
+
+.next_segment:
+    inc edx
+    jmp .check_body
+
+.collision:
+    mov byte [game_over], 1
+
+.no_collision:
     ret
 
 ;-----------------------------------------------------------

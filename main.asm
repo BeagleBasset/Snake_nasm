@@ -11,6 +11,8 @@ extern state_debug_print
 extern state_set_direction
 extern state_update
 extern state_check_food
+extern state_check_collision
+extern game_over
 extern draw_cursor_hide
 extern draw_cursor_show
 
@@ -99,6 +101,9 @@ _start:
     ;-------------------------------------------------------
 
     call state_update
+    call state_check_collision
+    cmp byte [game_over], 1
+    je .game_over
     call state_check_food
 
     ;-------------------------------------------------------
@@ -117,6 +122,12 @@ _start:
 
     jmp .loop
 
+.game_over:
+
+    call draw_frame
+    call draw_snake
+    call draw_food
+    jmp .quit
 
 .quit:
 
