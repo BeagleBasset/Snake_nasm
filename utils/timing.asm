@@ -25,7 +25,7 @@ global sleep_tick
 section .data
     tick_length:
         dq 0                 ; tv_sec
-        dq 500000000         ; tv_nsec (0.5 seconds)
+        dq 100000000         ; tv_nsec (0.1 seconds)
 
 section .text
 

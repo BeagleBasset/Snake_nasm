@@ -29,6 +29,12 @@ section .data
     esc_H           db "H"
     esc_H_len       equ $ - esc_H
 
+    cursor_hide     db ESC, "[?25l"
+    curosor_hide_len equ $ - cursor_hide
+
+    cursor_show     db ESC, "[?25h"
+    cursor_show_len equ $ - cursor_show
+
     ; Drawing characters
     border_h        db "-"
     border_v        db "|"
@@ -44,6 +50,8 @@ section .bss
     number_buffer   resb 32
 
 section .text
+    global draw_cursor_hide
+    global draw_cursor_show
     global draw_frame
     global draw_snake
     global draw_food
@@ -325,4 +333,26 @@ draw_food:
     call print
 
     pop rbx
+    ret
+
+;-----------------------------------------------------------
+; draw_cursor_hide
+;-----------------------------------------------------------
+
+draw_cursor_hide:
+    mov rdi, STDOUT
+    mov rsi, cursor_hide
+    mov rdx, curosor_hide_len
+    call print
+    ret
+
+;-----------------------------------------------------------
+; draw_cursor_show
+;-----------------------------------------------------------
+
+draw_cursor_show:
+    mov rdi, STDOUT
+    mov rsi, cursor_show
+    mov rdx, cursor_show_len
+    call print
     ret

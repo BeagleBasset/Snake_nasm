@@ -47,12 +47,14 @@ section .bss
     game_over    resb 1
 
     int_buffer   resb 32     ; buffer for int_to_string
+    rng_state    resd 1
 
 section .text
     global state_init
     global state_debug_print
     global state_update
     global state_set_direction
+    global state_check_food
 
     global snake_x
     global snake_y
@@ -65,6 +67,7 @@ section .text
 ;-----------------------------------------------------------
 
 state_init:
+    mov dword [rng_state], 0xDEADBEEF
     mov byte [snake_length], 3
     mov byte [dir_x], 1
     mov byte [dir_y], 0
@@ -295,3 +298,141 @@ state_set_direction:
 
 .reject:
     ret    
+
+;-----------------------------------------------------------
+; rng_next
+;
+; Advance the LCG and return a value in [0, n-1].
+;
+; Input:
+;   edi = n
+;
+; Output:
+;   eax = rng_state % n
+;
+; Clobbers:
+;   EAX, ECX, EDX
+;-----------------------------------------------------------
+
+rng_next:
+    mov eax, [rng_state]
+
+    ; state = state * 1103515245 + 12345
+    mov ecx, 1103515245
+    imul eax, ecx
+    add eax, 12345
+
+    mov [rng_state], eax
+
+    ; eax = state % n
+    xor edx, edx
+    div edi
+
+    mov eax, edx
+    ret
+
+;-----------------------------------------------------------
+; place_food
+;
+; Generate a new food position which is not occupied
+; by any snake segment.
+;
+; Output:
+;   food_x = random value in [0, BOARD_WIDTH-1]
+;   food_y = random value in [0, BOARD_HEIGHT-1]
+;
+; Not global: only used inside state.asm.
+;-----------------------------------------------------------
+
+place_food:
+.generate:
+    ; Generate X
+    mov edi, BOARD_WIDTH
+    call rng_next
+    mov [food_x], al
+
+    ; Generate Y
+    mov edi, BOARD_HEIGHT
+    call rng_next
+    mov [food_y], al
+
+    ; Check all snake segments
+    xor ecx, ecx
+
+.check_snake:
+    cmp cl, [snake_length]
+    jae .free_position
+
+    ; Check X
+    mov al, [snake_x + rcx]
+    cmp al, [food_x]
+    jne .next_segment
+
+    ; Check Y
+    mov al, [snake_y + rcx]
+    cmp al, [food_y]
+    je .generate
+
+.next_segment:
+    inc ecx
+    jmp .check_snake
+
+.free_position:
+    ret
+
+;-----------------------------------------------------------
+; state_check_food
+;
+; Check whether the snake head is on the food.
+;
+; If yes:
+;   - grow the snake if it is not at MAX_LENGTH
+;   - increase score
+;   - place food at a new position
+;
+; Input:
+;   none
+;
+; Output:
+;   none
+;-----------------------------------------------------------
+
+state_check_food:
+    ; Check X coordinate
+    mov al, [snake_x]
+    cmp al, [food_x]
+    jne .no_food
+
+    ; Check Y coordinate
+    mov al, [snake_y]
+    cmp al, [food_y]
+    jne .no_food
+
+    ; We are on the food.
+
+    ; Grow only if snake_length < MAX_LENGTH
+    movzx eax, byte [snake_length]
+    cmp eax, MAX_LENGTH
+    jae .no_growth
+
+    ; new index = old snake_length
+    ; copy old tail into new tail
+    movzx ecx, byte [snake_length]
+
+    mov al, [snake_x + rcx - 1]
+    mov [snake_x + rcx], al
+
+    mov al, [snake_y + rcx - 1]
+    mov [snake_y + rcx], al
+
+    inc byte [snake_length]
+
+.no_growth:
+    ; score++
+    inc byte [score]
+
+    ; Generate new food position
+    call place_food
+
+.no_food:
+    ret

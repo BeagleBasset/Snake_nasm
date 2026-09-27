@@ -10,6 +10,9 @@ extern state_init
 extern state_debug_print
 extern state_set_direction
 extern state_update
+extern state_check_food
+extern draw_cursor_hide
+extern draw_cursor_show
 
 extern draw_frame
 extern draw_snake
@@ -20,6 +23,7 @@ section .text
 
 _start:
     call input_raw_enable
+    call draw_cursor_hide
     call state_init
 
 .loop:
@@ -95,6 +99,7 @@ _start:
     ;-------------------------------------------------------
 
     call state_update
+    call state_check_food
 
     ;-------------------------------------------------------
     ; Draw
@@ -116,6 +121,7 @@ _start:
 .quit:
 
     call input_raw_disable
+    call draw_cursor_show
 
     mov rax, SYS_EXIT
     xor rdi, rdi
