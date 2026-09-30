@@ -400,8 +400,8 @@ draw_game_over:
     ; Col = 1
     ;-------------------------------------------------------
 
-    mov rdi, BOARD_HEIGHT + 5
-    mov rsi, 1
+    mov rax, BOARD_HEIGHT + 5
+    mov rbx, 1
     call cursor_to
 
     mov rdi, STDOUT
