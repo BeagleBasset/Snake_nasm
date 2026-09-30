@@ -15,6 +15,7 @@ extern snake_y
 extern snake_length
 extern food_x
 extern food_y
+extern score
 
 section .data
     %include "config.inc"
@@ -46,8 +47,16 @@ section .data
     clear_screen    db ESC, "[2J", ESC, "[H"
     clear_screen_len equ $ - clear_screen
 
+    ; Game over messages
+    game_over_msg   db "GAME OVER"
+    game_over_msg_len equ $ - game_over_msg
+
+    score_msg       db "Score: "
+    score_msg_len   equ $ - score_msg
+
 section .bss
     number_buffer   resb 32
+    int_buffer      resb 32
 
 section .text
     global draw_cursor_hide
@@ -55,6 +64,7 @@ section .text
     global draw_frame
     global draw_snake
     global draw_food
+    global draw_game_over
 
 ;-----------------------------------------------------------
 ; cursor_to
@@ -355,4 +365,58 @@ draw_cursor_show:
     mov rsi, cursor_show
     mov rdx, cursor_show_len
     call print
+    ret
+
+;-----------------------------------------------------------
+; draw_game_over
+;
+; Draws:
+;
+;     GAME OVER
+;     Score: N
+;
+; below the game board.
+;-----------------------------------------------------------
+
+draw_game_over:
+    ;-------------------------------------------------------
+    ; "GAME OVER"
+    ; Row = BOARD_HEIGHT + 4
+    ; Col = 1
+    ;-------------------------------------------------------
+
+    mov rax, BOARD_HEIGHT + 4
+    mov rbx, 1
+    call cursor_to
+
+    mov rdi, STDOUT
+    mov rsi, game_over_msg
+    mov rdx, game_over_msg_len
+    call print
+
+    ;-------------------------------------------------------
+    ; "Score: N"
+    ; Row = BOARD_HEIGHT + 5
+    ; Col = 1
+    ;-------------------------------------------------------
+
+    mov rdi, BOARD_HEIGHT + 5
+    mov rsi, 1
+    call cursor_to
+
+    mov rdi, STDOUT
+    mov rsi, score_msg
+    mov rdx, score_msg_len
+    call print
+
+    ; Convert score to string
+    movzx eax, byte [score]
+
+    lea rsi, [int_buffer + 31]
+    call int_to_string
+
+    ; Print converted number
+    mov rdi, STDOUT
+    call print
+
     ret

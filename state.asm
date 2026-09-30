@@ -63,6 +63,7 @@ section .text
     global food_x
     global food_y
     global game_over
+    global score
 
 ;-----------------------------------------------------------
 ; state_init

@@ -15,6 +15,7 @@ extern state_check_collision
 extern game_over
 extern draw_cursor_hide
 extern draw_cursor_show
+extern draw_game_over
 
 extern draw_frame
 extern draw_snake
@@ -127,6 +128,7 @@ _start:
     call draw_frame
     call draw_snake
     call draw_food
+    call draw_game_over
     jmp .quit
 
 .quit:
